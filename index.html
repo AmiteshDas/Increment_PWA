@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<meta name="theme-color" content="#0b0b0e" />
+<title>Increment</title>
+<link rel="manifest" href="./manifest.json" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Increment" />
+<style>
+  :root{
+    --bg:#0b0b0e;
+    --surface:#151519;
+    --surface-2:#1d1d22;
+    --border:#2a2a30;
+    --text:#f2f1ee;
+    --text-dim:#9a9aa2;
+    --text-faint:#5c5c64;
+    --accent:#ff8c5a;
+    --accent-dim:#3a271f;
+    --radius:22px;
+    --radius-sm:14px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+    height:100dvh;
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:520px;
+    height:100%;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+  .screen{
+    position:absolute; inset:0;
+    display:none;
+    flex-direction:column;
+    overflow-y:auto;
+    padding:calc(env(safe-area-inset-top) + 22px) 20px calc(env(safe-area-inset-bottom) + 110px);
+    animation:fadeIn .25s ease;
+  }
+  .screen.active{display:flex;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+  h1,h2,h3{margin:0; font-weight:600; letter-spacing:-.02em;}
+  .eyebrow{
+    font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--text-faint); font-weight:600; margin-bottom:4px;
+  }
+  .page-title{font-size:28px; margin-bottom:2px;}
+  .sub{color:var(--text-dim); font-size:14px; line-height:1.5;}
+
+  /* HOME */
+  .home-header{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px;}
+  .graph-card{
+    background:linear-gradient(180deg, var(--surface), var(--surface-2));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px 18px 12px;
+    margin-bottom:18px;
+  }
+  .legend{display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:10px;}
+  .legend-item{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-dim); cursor:pointer;}
+  .legend-dot{width:8px; height:8px; border-radius:50%; flex:none;}
+  .legend-item b{color:var(--text); font-weight:600;}
+  .state-pill{
+    font-size:10.5px; padding:2px 7px; border-radius:20px; background:var(--surface-2);
+    color:var(--text-faint); border:1px solid var(--border); margin-left:2px;
+  }
+
+  .ghost-wrap{display:flex; flex-direction:column; align-items:center; text-align:center; padding:30px 6px 10px;}
+  .ghost-wrap .sub{max-width:280px; margin:10px auto 18px;}
+  .quote{
+    font-size:14px; font-style:italic; color:var(--text-faint);
+    border-left:2px solid var(--border); padding-left:12px; text-align:left;
+    margin-top:6px; max-width:260px;
+  }
+
+  .section-title{font-size:13px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin:20px 0 10px;}
+  .arc-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:14px 16px; margin-bottom:10px; cursor:pointer;
+  }
+  .arc-row .left{display:flex; align-items:center; gap:12px;}
+  .swatch{width:10px; height:10px; border-radius:50%;}
+  .arc-name{font-weight:600; font-size:15px;}
+  .arc-meta{font-size:12.5px; color:var(--text-dim); margin-top:2px;}
+  .chev{color:var(--text-faint); font-size:18px;}
+
+  /* FAB */
+  .fab{
+    position:absolute; left:20px; right:20px;
+    bottom:calc(env(safe-area-inset-bottom) + 22px);
+    background:var(--accent); color:#1a0e07;
+    border:none; border-radius:18px; padding:16px;
+    font-size:16px; font-weight:700; letter-spacing:-.01em;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    box-shadow:0 10px 30px -8px rgba(255,140,90,.55);
+    max-width:480px; margin:0 auto;
+  }
+  .fab:active{transform:scale(.98);}
+
+  /* SHEET */
+  .sheet-backdrop{
+    position:absolute; inset:0; background:rgba(0,0,0,.55);
+    display:none; z-index:20; backdrop-filter:blur(2px);
+  }
+  .sheet-backdrop.active{display:block; animation:fadeIn .2s ease;}
+  .sheet{
+    position:absolute; left:0; right:0; bottom:0; z-index:21;
+    background:var(--surface-2); border:1px solid var(--border); border-bottom:none;
+    border-radius:26px 26px 0 0;
+    padding:14px 20px calc(env(safe-area-inset-bottom) + 24px);
+    max-height:88%; overflow-y:auto;
+    transform:translateY(100%);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  }
+  .sheet.active{transform:translateY(0);}
+  .grabber{width:36px; height:4px; background:var(--border); border-radius:4px; margin:0 auto 14px;}
+  .sheet-title{font-size:19px; font-weight:700; margin-bottom:4px;}
+
+  .pick-row{
+    display:flex; align-items:center; gap:12px; padding:13px 4px;
+    border-bottom:1px solid var(--border); cursor:pointer;
+  }
+  .pick-row:last-child{border-bottom:none;}
+  .pick-row .swatch{width:11px; height:11px;}
+  .pick-row.new{color:var(--accent); font-weight:600;}
+
+  label.field-label{
+    display:block; font-size:12.5px; color:var(--text-dim); font-weight:600;
+    text-transform:uppercase; letter-spacing:.05em; margin:18px 0 8px;
+  }
+  input[type=text], textarea, select{
+    width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text);
+    border-radius:12px; padding:12px 14px; font-size:15px; font-family:inherit;
+    resize:none;
+  }
+  textarea{min-height:64px; line-height:1.4;}
+  input[type=text]:focus, textarea:focus{outline:none; border-color:var(--accent);}
+
+  .chip-row{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    padding:8px 14px; border-radius:20px; border:1px solid var(--border); background:var(--surface);
+    font-size:13.5px; color:var(--text-dim); cursor:pointer;
+  }
+  .chip.selected{background:var(--accent); border-color:var(--accent); color:#1a0e07; font-weight:600;}
+
+  .slider-row{display:flex; align-items:center; gap:12px; margin-top:6px;}
+  input[type=range]{flex:1; accent-color:var(--accent); height:4px;}
+  .slider-val{width:34px; text-align:center; font-weight:700; font-size:16px;}
+
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; margin-top:18px;}
+  .switch{width:46px; height:27px; background:var(--surface); border:1px solid var(--border); border-radius:20px; position:relative; cursor:pointer; flex:none;}
+  .switch .knob{position:absolute; top:2px; left:2px; width:21px; height:21px; border-radius:50%; background:var(--text-dim); transition:.2s;}
+  .switch.on{background:var(--accent-dim); border-color:var(--accent);}
+  .switch.on .knob{transform:translateX(19px); background:var(--accent);}
+
+  .primary-btn{
+    width:100%; background:var(--accent); color:#1a0e07; border:none; border-radius:14px;
+    padding:15px; font-size:15.5px; font-weight:700; margin-top:22px; cursor:pointer;
+  }
+  .primary-btn:disabled{opacity:.4;}
+  .ghost-btn{
+    width:100%; background:transparent; color:var(--text-dim); border:1px solid var(--border);
+    border-radius:14px; padding:13px; font-size:14.5px; font-weight:600; margin-top:10px; cursor:pointer;
+  }
+  .link-btn{background:none; border:none; color:var(--text-dim); font-size:14px; text-decoration:underline; cursor:pointer; padding:6px 0;}
+
+  .top-nav{display:flex; align-items:center; gap:12px; margin-bottom:6px;}
+  .back-btn{background:var(--surface); border:1px solid var(--border); color:var(--text); width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; flex:none;}
+
+  .stat-grid{display:flex; gap:10px; margin:16px 0;}
+  .stat-card{flex:1; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 14px;}
+  .stat-val{font-size:20px; font-weight:700;}
+  .stat-label{font-size:11.5px; color:var(--text-faint); margin-top:2px; text-transform:uppercase; letter-spacing:.04em;}
+
+  .session-item{padding:12px 0; border-bottom:1px solid var(--border);}
+  .session-top{display:flex; justify-content:space-between; align-items:center; font-size:13.5px;}
+  .session-date{color:var(--text-dim);}
+  .session-es{font-weight:700;}
+  .session-reflect{font-size:13px; color:var(--text-dim); margin-top:6px; line-height:1.45;}
+  .session-reflect b{color:var(--text-faint); font-weight:600;}
+
+  .segmented{display:flex; gap:6px; margin-top:6px;}
+  .seg{flex:1; text-align:center; padding:9px 4px; border-radius:10px; border:1px solid var(--border); background:var(--surface); font-size:12px; color:var(--text-dim); cursor:pointer;}
+  .seg.selected{background:var(--accent); border-color:var(--accent); color:#1a0e07; font-weight:700;}
+
+  ::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="home-header">
+      <div>
+        <div class="eyebrow">Increment</div>
+        <h1 class="page-title">Your arcs</h1>
+      </div>
+    </div>
+
+    <div id="graph-card" class="graph-card"></div>
+
+    <div id="arc-list-wrap"></div>
+  </div>
+
+  <!-- ARC DETAIL -->
+  <div class="screen" id="screen-detail">
+    <div class="top-nav">
+      <button class="back-btn" data-nav="screen-home">←</button>
+      <div>
+        <div class="eyebrow" id="detail-category"></div>
+        <h2 id="detail-name"></h2>
+      </div>
+    </div>
+    <div id="detail-graph" class="graph-card"></div>
+    <div class="stat-grid" id="detail-stats"></div>
+    <div class="section-title">Sessions</div>
+    <div id="detail-sessions"></div>
+  </div>
+
+  <!-- NEW ARC -->
+  <div class="screen" id="screen-newarc">
+    <div class="top-nav">
+      <button class="back-btn" data-nav="back">←</button>
+      <h2>New arc</h2>
+    </div>
+    <label class="field-label">Name</label>
+    <input type="text" id="newarc-name" placeholder="e.g. Morning running" maxlength="40" />
+
+    <label class="field-label">Category</label>
+    <div class="chip-row" id="newarc-chips"></div>
+
+    <div class="toggle-row">
+      <div>
+        <div style="font-weight:600; font-size:14.5px;">Set as primary</div>
+        <div class="sub" style="margin-top:2px;">Shown first, used as your default</div>
+      </div>
+      <div class="switch" id="newarc-primary"><div class="knob"></div></div>
+    </div>
+
+    <button class="primary-btn" id="newarc-save">Create arc</button>
+  </div>
+
+  <!-- SHEET BACKDROP + PICKER + LOG FORM (both live in one sheet element, swap content) -->
+  <div class="sheet-backdrop" id="sheet-backdrop"></div>
+  <div class="sheet" id="sheet">
+    <div class="grabber"></div>
+    <div id="sheet-content"></div>
+  </div>
+
+  <button class="fab" id="fab">＋ Log increment</button>
+</div>
+
+<script>
+/* ---------------- storage ---------------- */
+const DB_KEY = "increment_db_v1";
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(DB_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return { arcs: {}, sessions: {} };
+}
+function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+let db = loadDB();
+
+const CATEGORIES = ["Running","Reading","Writing","Strength","Study","Craft","Other"];
+const VIBGYOR = ["#8B7CF6","#6B7CF3","#4E9EF5","#3FBF8F","#E8B84B","#F2954B","#EF6F6F"];
+
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+/* ---------------- effort score ---------------- */
+// willingness 1..5 -> multiplier
+const WILL_MULT = {1:0.6, 2:0.8, 3:1.0, 4:1.2, 5:1.4};
+const WILL_LABEL = {1:"Rather not", 2:"Reluctant", 3:"Neutral", 4:"Willing", 5:"Would love to"};
+
+function arcSessions(arcId){
+  return Object.values(db.sessions).filter(s=>s.arcId===arcId).sort((a,b)=> a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+}
+
+function arcState(arcId){
+  const s = arcSessions(arcId);
+  if(s.length < 3) return "Building";
+  const recent = s.slice(-3);
+  const prior = s.slice(-6,-3);
+  const avg = arr => arr.reduce((a,b)=>a+b.es,0)/arr.length;
+  const recentAvg = avg(recent);
+  if(prior.length === 0) return "Rising";
+  const priorAvg = avg(prior);
+  const delta = recentAvg - priorAvg;
+  const threshold = priorAvg * 0.08;
+  if(delta > threshold) return "Rising";
+  if(delta < -threshold) return "Declining";
+  return "Steady";
+}
+
+function arcMaturity(arcId){
+  // 0..1, used to darken color as an arc matures (more sessions)
+  const n = arcSessions(arcId).length;
+  return Math.min(n/14, 1);
+}
+
+function shadeColor(hex, maturity){
+  // darken toward background as maturity increases
+  const c = hex.replace('#','');
+  const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+  const f = 1 - maturity*0.45;
+  const rr = Math.round(r*f + 11*(1-f));
+  const gg = Math.round(g*f + 11*(1-f));
+  const bb = Math.round(b*f + 14*(1-f));
+  return `rgb(${rr},${gg},${bb})`;
+}
+
+/* ---------------- navigation ---------------- */
+let navStack = ["screen-home"];
+function showScreen(id, push=true){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  if(push) navStack.push(id);
+}
+document.querySelectorAll("[data-nav]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const target = btn.dataset.nav;
+    if(target === "back"){
+      navStack.pop();
+      showScreen(navStack[navStack.length-1] || "screen-home", false);
+    } else {
+      navStack = [target];
+      showScreen(target, false);
+    }
+  });
+});
+
+/* ---------------- sheet ---------------- */
+const sheetEl = document.getElementById("sheet");
+const backdropEl = document.getElementById("sheet-backdrop");
+function openSheet(html){
+  document.getElementById("sheet-content").innerHTML = html;
+  sheetEl.classList.add("active");
+  backdropEl.classList.add("active");
+}
+function closeSheet(){
+  sheetEl.classList.remove("active");
+  backdropEl.classList.remove("active");
+}
+backdropEl.addEventListener("click", closeSheet);
+
+/* ---------------- graph rendering (SVG line chart, up to 3 arcs overlaid) ---------------- */
+function renderGraph(arcIds, height=140){
+  const w = 460, h = height, pad = 10;
+  if(arcIds.length === 0) return renderGhostGraph(w,h);
+
+  let allMax = 1;
+  const series = arcIds.map(id=>{
+    const sess = arcSessions(id);
+    if(sess.length > allMax) allMax = 0; // placeholder, recompute below
+    return sess;
+  });
+  const maxES = Math.max(1, ...series.flat().map(s=>s.es));
+
+  let svg = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">`;
+  arcIds.forEach((id, idx)=>{
+    const arc = db.arcs[id];
+    const sess = arcSessions(id);
+    if(sess.length === 0) return;
+    const color = shadeColor(arc.color, arcMaturity(id));
+    const n = sess.length;
+    const pts = sess.map((s,i)=>{
+      const x = pad + (n===1 ? (w-2*pad)/2 : (i/(n-1))*(w-2*pad));
+      const y = h - pad - (s.es/maxES)*(h-2*pad);
+      return [x,y];
+    });
+    const d = pts.map((p,i)=> (i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+    svg += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity="${idx===0?1:0.88}"/>`;
+    const last = pts[pts.length-1];
+    svg += `<circle cx="${last[0]}" cy="${last[1]}" r="4" fill="${color}"/>`;
+  });
+  svg += `</svg>`;
+  return svg;
+}
+
+function renderGhostGraph(w=460,h=140){
+  const pad=10;
+  const pts=[];
+  const n=24;
+  for(let i=0;i<=n;i++){
+    const t=i/n;
+    const x = pad + t*(w-2*pad);
+    const y = h - pad - (1-(1-t)*(1-t))*(h-2*pad)*0.7;
+    pts.push([x,y]);
+  }
+  const d = pts.map((p,i)=> (i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
+    <path d="${d}" fill="none" stroke="#3a3a42" stroke-width="2.2" stroke-dasharray="1 9" stroke-linecap="round"/>
+  </svg>`;
+}
+
+/* ---------------- home screen ---------------- */
+function renderHome(){
+  const arcs = Object.values(db.arcs);
+  const graphCard = document.getElementById("graph-card");
+  const listWrap = document.getElementById("arc-list-wrap");
+
+  if(arcs.length === 0){
+    graphCard.innerHTML = `
+      <div class="ghost-wrap">
+        ${renderGhostGraph(460,120)}
+        <h3 style="margin-top:14px;">Nothing tracked yet</h3>
+        <div class="sub">An arc is a curve of effort over time. Log a session and watch it start to take shape.</div>
+        <div class="quote">"I'm 12 increments into my running arc, it's plateauing."</div>
+      </div>`;
+    listWrap.innerHTML = "";
+    return;
+  }
+
+  // top 3 by most recent session activity (fallback: createdAt)
+  const withRecency = arcs.map(a=>{
+    const sess = arcSessions(a.id);
+    const last = sess.length ? sess[sess.length-1].date : a.createdAt;
+    return {a, last};
+  }).sort((x,y)=> y.last.localeCompare(x.last));
+  const top3 = withRecency.slice(0,3).map(x=>x.a.id);
+
+  graphCard.innerHTML = renderGraph(top3, 150) + `
+    <div class="legend">
+      ${top3.map(id=>{
+        const arc = db.arcs[id];
+        const color = shadeColor(arc.color, arcMaturity(id));
+        return `<div class="legend-item" data-open="${id}">
+          <span class="legend-dot" style="background:${color}"></span>
+          <b>${arc.name}</b><span class="state-pill">${arcState(id)}</span>
+        </div>`;
+      }).join("")}
+    </div>`;
+
+  graphCard.querySelectorAll("[data-open]").forEach(el=>{
+    el.addEventListener("click", ()=> openDetail(el.dataset.open));
+  });
+
+  const rest = withRecency.map(x=>x.a);
+  listWrap.innerHTML = `<div class="section-title">All arcs</div>` + rest.map(a=>{
+    const color = shadeColor(a.color, arcMaturity(a.id));
+    const n = arcSessions(a.id).length;
+    return `<div class="arc-row" data-open="${a.id}">
+      <div class="left">
+        <span class="swatch" style="background:${color}"></span>
+        <div>
+          <div class="arc-name">${a.name}${a.primary ? " ★" : ""}</div>
+          <div class="arc-meta">${a.category} · ${n} session${n===1?"":"s"} · ${arcState(a.id)}</div>
+        </div>
+      </div>
+      <div class="chev">›</div>
+    </div>`;
+  }).join("");
+  listWrap.querySelectorAll("[data-open]").forEach(el=>{
+    el.addEventListener("click", ()=> openDetail(el.dataset.open));
+  });
+}
+
+/* ---------------- arc detail ---------------- */
+function openDetail(arcId){
+  const arc = db.arcs[arcId];
+  document.getElementById("detail-category").textContent = arc.category;
+  document.getElementById("detail-name").textContent = arc.name;
+  document.getElementById("detail-graph").innerHTML = renderGraph([arcId], 160);
+
+  const sess = arcSessions(arcId);
+  const avgES = sess.length ? (sess.reduce((a,b)=>a+b.es,0)/sess.length).toFixed(1) : "–";
+  const state = arcState(arcId);
+  const stateNote = state === "Declining" ? "Maturing" : state;
+  document.getElementById("detail-stats").innerHTML = `
+    <div class="stat-card"><div class="stat-val">${sess.length}</div><div class="stat-label">Sessions</div></div>
+    <div class="stat-card"><div class="stat-val">${avgES}</div><div class="stat-label">Avg effort</div></div>
+    <div class="stat-card"><div class="stat-val">${stateNote}</div><div class="stat-label">Arc state</div></div>
+  `;
+
+  const list = [...sess].reverse();
+  document.getElementById("detail-sessions").innerHTML = list.length ? list.map(s=>`
+    <div class="session-item">
+      <div class="session-top">
+        <span class="session-date">${s.date}</span>
+        <span class="session-es">ES ${s.es.toFixed(1)}</span>
+      </div>
+      ${s.r1 ? `<div class="session-reflect"><b>What made it hard:</b> ${escapeHtml(s.r1)}</div>` : ""}
+      ${s.r2 ? `<div class="session-reflect"><b>Next time:</b> ${escapeHtml(s.r2)}</div>` : ""}
+    </div>`).join("") : `<div class="sub" style="padding:10px 0;">No sessions logged yet.</div>`;
+
+  navStack = ["screen-home","screen-detail"];
+  showScreen("screen-detail", false);
+}
+
+function escapeHtml(str){
+  const d = document.createElement("div");
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ---------------- new arc screen ---------------- */
+let newArcCategory = CATEGORIES[0];
+function renderNewArcChips(){
+  const wrap = document.getElementById("newarc-chips");
+  wrap.innerHTML = CATEGORIES.map(c=>`<div class="chip ${c===newArcCategory?"selected":""}" data-cat="${c}">${c}</div>`).join("");
+  wrap.querySelectorAll(".chip").forEach(ch=>{
+    ch.addEventListener("click", ()=>{ newArcCategory = ch.dataset.cat; renderNewArcChips(); });
+  });
+}
+document.getElementById("newarc-primary").addEventListener("click", function(){
+  this.classList.toggle("on");
+});
+
+function openNewArc(fromSheet){
+  document.getElementById("newarc-name").value = "";
+  newArcCategory = CATEGORIES[0];
+  renderNewArcChips();
+  const primaryToggle = document.getElementById("newarc-primary");
+  primaryToggle.classList.toggle("on", Object.keys(db.arcs).length === 0);
+  if(fromSheet) closeSheet();
+  navStack.push("screen-newarc");
+  showScreen("screen-newarc", false);
+}
+
+document.getElementById("newarc-save").addEventListener("click", ()=>{
+  const name = document.getElementById("newarc-name").value.trim();
+  if(!name) return;
+  const isPrimary = document.getElementById("newarc-primary").classList.contains("on");
+  const id = uid();
+  if(isPrimary){
+    Object.values(db.arcs).forEach(a=> a.primary = false);
+  }
+  const colorIdx = Object.keys(db.arcs).length % VIBGYOR.length;
+  db.arcs[id] = {
+    id, name, category: newArcCategory,
+    createdAt: todayStr(),
+    primary: isPrimary,
+    color: VIBGYOR[colorIdx]
+  };
+  saveDB();
+  navStack = ["screen-home"];
+  showScreen("screen-home", false);
+  renderHome();
+  openLogForm(id); // straight into logging the first session
+});
+
+/* ---------------- log increment flow ---------------- */
+function openLogPicker(){
+  const arcs = Object.values(db.arcs);
+  const rows = arcs.map(a=>{
+    const color = shadeColor(a.color, arcMaturity(a.id));
+    return `<div class="pick-row" data-arc="${a.id}">
+      <span class="swatch" style="background:${color}"></span>
+      <div>
+        <div style="font-weight:600; font-size:14.5px;">${a.name}</div>
+        <div class="arc-meta">${a.category}</div>
+      </div>
+    </div>`;
+  }).join("");
+  openSheet(`
+    <div class="sheet-title">Log an increment</div>
+    <div class="sub" style="margin-bottom:6px;">Which arc is this for?</div>
+    ${rows}
+    <div class="pick-row new" id="pick-newarc">＋ New arc</div>
+  `);
+  document.querySelectorAll("[data-arc]").forEach(el=>{
+    el.addEventListener("click", ()=> openLogForm(el.dataset.arc));
+  });
+  document.getElementById("pick-newarc").addEventListener("click", ()=> openNewArc(true));
+}
+
+let logState = { difficulty: 5, willingness: 3 };
+function openLogForm(arcId){
+  logState = { difficulty: 5, willingness: 3 };
+  const arc = db.arcs[arcId];
+  openSheet(`
+    <div class="sheet-title">${arc.name}</div>
+    <div class="sub">How much did this take out of you?</div>
+
+    <label class="field-label">Difficulty</label>
+    <div class="slider-row">
+      <input type="range" min="1" max="10" value="5" id="log-difficulty" />
+      <div class="slider-val" id="log-difficulty-val">5</div>
+    </div>
+
+    <label class="field-label">Would you do it again?</label>
+    <div class="segmented" id="log-willingness">
+      ${[1,2,3,4,5].map(v=>`<div class="seg ${v===3?'selected':''}" data-v="${v}">${WILL_LABEL[v]}</div>`).join("")}
+    </div>
+
+    <label class="field-label">What made this feel hard?</label>
+    <textarea id="log-r1" placeholder="Optional"></textarea>
+
+    <label class="field-label">What would you change next time?</label>
+    <textarea id="log-r2" placeholder="Optional"></textarea>
+
+    <button class="primary-btn" id="log-save">Save increment</button>
+  `);
+
+  const slider = document.getElementById("log-difficulty");
+  const sliderVal = document.getElementById("log-difficulty-val");
+  slider.addEventListener("input", ()=>{
+    logState.difficulty = +slider.value;
+    sliderVal.textContent = slider.value;
+  });
+
+  document.querySelectorAll("#log-willingness .seg").forEach(seg=>{
+    seg.addEventListener("click", ()=>{
+      document.querySelectorAll("#log-willingness .seg").forEach(s=>s.classList.remove("selected"));
+      seg.classList.add("selected");
+      logState.willingness = +seg.dataset.v;
+    });
+  });
+
+  document.getElementById("log-save").addEventListener("click", ()=>{
+    const es = logState.difficulty * WILL_MULT[logState.willingness];
+    const id = uid();
+    db.sessions[id] = {
+      id, arcId, date: todayStr(),
+      difficulty: logState.difficulty,
+      willingness: logState.willingness,
+      es,
+      r1: document.getElementById("log-r1").value.trim(),
+      r2: document.getElementById("log-r2").value.trim()
+    };
+    saveDB();
+    closeSheet();
+    renderHome();
+    if(document.getElementById("screen-detail").classList.contains("active")){
+      openDetail(arcId);
+    }
+  });
+}
+
+document.getElementById("fab").addEventListener("click", ()=>{
+  if(Object.keys(db.arcs).length === 0){
+    openNewArc(false);
+  } else {
+    openLogPicker();
+  }
+});
+
+/* ---------------- init ---------------- */
+renderHome();
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
