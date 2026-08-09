@@ -50,7 +50,7 @@
     display:none;
     flex-direction:column;
     overflow-y:auto;
-    padding:calc(env(safe-area-inset-top) + 22px) 20px calc(env(safe-area-inset-bottom) + 110px);
+    padding:calc(env(safe-area-inset-top) + 22px) 20px calc(env(safe-area-inset-bottom) + 92px);
     animation:fadeIn .25s ease;
   }
   .screen.active{display:flex;}
@@ -109,18 +109,21 @@
   .arc-meta{font-size:12.5px; color:var(--text-dim); margin-top:2px;}
   .chev{color:var(--text-faint); font-size:18px;}
 
-  /* FAB */
-  .fab{
-    position:absolute; left:20px; right:20px;
-    bottom:calc(env(safe-area-inset-bottom) + 22px);
-    background:var(--accent); color:#1a0e07;
-    border:none; border-radius:18px; padding:16px;
-    font-size:16px; font-weight:700; letter-spacing:-.01em;
-    display:flex; align-items:center; justify-content:center; gap:8px;
-    box-shadow:0 10px 30px -8px rgba(255,140,90,.55);
-    max-width:480px; margin:0 auto;
+  /* TAB BAR */
+  .tabbar{
+    position:absolute; left:0; right:0; bottom:0; z-index:15;
+    background:var(--surface-2); border-top:1px solid var(--border);
+    display:flex;
+    padding-bottom:env(safe-area-inset-bottom);
   }
-  .fab:active{transform:scale(.98);}
+  .tab-item{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:3px; padding:10px 0 8px; color:var(--text-dim); text-decoration:none;
+    font-size:11px; font-weight:600; background:none; border:none; cursor:pointer; font-family:inherit;
+  }
+  .tab-item.active{color:var(--accent);}
+  .tab-icon{width:21px; height:21px; color:currentColor;}
+  .tab-item:active{opacity:.7;}
 
   /* SHEET */
   .sheet-backdrop{
@@ -221,7 +224,6 @@
         <div class="eyebrow">Increment</div>
         <h1 class="page-title">Your arcs</h1>
       </div>
-      <a href="guide.html" style="color:var(--text-faint); text-decoration:none; font-size:12.5px; margin-top:6px;">Guide</a>
     </div>
 
     <div id="graph-card" class="graph-card"></div>
@@ -274,7 +276,20 @@
     <div id="sheet-content"></div>
   </div>
 
-  <button class="fab" id="fab">＋ Log increment</button>
+  <div class="tabbar">
+    <button class="tab-item active" id="tab-graphs">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18c3 0 4-9 8-10s6 3 10 3"/></svg>
+      Graphs
+    </button>
+    <button class="tab-item" id="tab-log">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+      Log
+    </button>
+    <a class="tab-item" href="guide.html">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H12v16H5.5c-.8 0-1.5-.7-1.5-1.5v-13Z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H12v16h6.5c.8 0 1.5-.7 1.5-1.5v-13Z"/></svg>
+      Guide
+    </a>
+  </div>
 </div>
 
 <script>
@@ -657,7 +672,11 @@ function openLogForm(arcId){
   });
 }
 
-document.getElementById("fab").addEventListener("click", ()=>{
+document.getElementById("tab-graphs").addEventListener("click", ()=>{
+  navStack = ["screen-home"];
+  showScreen("screen-home", false);
+});
+document.getElementById("tab-log").addEventListener("click", ()=>{
   if(Object.keys(db.arcs).length === 0){
     openNewArc(false);
   } else {
@@ -667,6 +686,14 @@ document.getElementById("fab").addEventListener("click", ()=>{
 
 /* ---------------- init ---------------- */
 renderHome();
+
+const _params = new URLSearchParams(location.search);
+if(_params.get("open") === "log"){
+  setTimeout(()=>{
+    if(Object.keys(db.arcs).length === 0){ openNewArc(false); }
+    else { openLogPicker(); }
+  }, 30);
+}
 
 if("serviceWorker" in navigator){
   window.addEventListener("load", ()=>{
