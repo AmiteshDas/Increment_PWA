@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Increment — Track your effort. Watch yourself grow.</title>
+<meta name="theme-color" content="#0b0b0e" />
+<style>
+  :root{
+    --bg:#0b0b0e;
+    --surface:#151519;
+    --surface-2:#1d1d22;
+    --border:#2a2a30;
+    --text:#f2f1ee;
+    --text-dim:#9a9aa2;
+    --text-faint:#5c5c64;
+    --accent:#ff8c5a;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:0 24px;}
+
+  .hero{padding:72px 0 40px; text-align:center;}
+  .eyebrow{
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--text-faint); font-weight:700; margin-bottom:18px;
+  }
+  h1{
+    font-size:clamp(32px,7vw,46px); font-weight:700; letter-spacing:-.03em;
+    margin:0 0 14px; line-height:1.08;
+  }
+  h1 span{color:var(--accent);}
+  .hero-sub{
+    color:var(--text-dim); font-size:17px; line-height:1.55; max-width:420px; margin:0 auto;
+  }
+
+  .arc-stage{margin:44px auto 0; max-width:520px;}
+  .arc-caption{font-size:12.5px; color:var(--text-faint); margin-top:10px;}
+
+  path#arc-path{
+    stroke-dasharray:900;
+    stroke-dashoffset:900;
+    animation:draw 2.4s cubic-bezier(.2,.7,.2,1) forwards .3s;
+  }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  circle#arc-dot{
+    opacity:0;
+    animation:dotIn .5s ease forwards 2.4s;
+  }
+  @keyframes dotIn{ to{ opacity:1; } }
+
+  section{padding:38px 0; border-top:1px solid var(--border);}
+  .section-label{
+    font-size:12px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.08em;
+    font-weight:700; margin-bottom:12px;
+  }
+  h2{font-size:22px; margin:0 0 12px; letter-spacing:-.02em;}
+  p{color:var(--text-dim); line-height:1.65; font-size:15.5px; margin:0 0 14px;}
+  p:last-child{margin-bottom:0;}
+  b.hl{color:var(--text); font-weight:700;}
+
+  .demo{
+    background:var(--surface); border:1px solid var(--border); border-radius:18px;
+    padding:20px 20px 18px; margin-top:18px;
+  }
+  .demo-label{font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); font-weight:700; margin-bottom:14px;}
+
+  .es-readout{display:flex; align-items:baseline; gap:8px; margin-bottom:16px;}
+  .es-num{font-size:40px; font-weight:800; letter-spacing:-.02em; color:var(--accent); font-variant-numeric:tabular-nums;}
+  .es-unit{font-size:13px; color:var(--text-faint); font-weight:600;}
+  .es-bar-track{height:6px; background:var(--surface-2); border-radius:6px; overflow:hidden; margin-bottom:20px;}
+  .es-bar-fill{height:100%; background:var(--accent); border-radius:6px; width:30%; transition:width .15s ease;}
+
+  .field-label{font-size:12px; color:var(--text-dim); font-weight:600; margin:0 0 8px;}
+  .slider-row{display:flex; align-items:center; gap:12px; margin-bottom:18px;}
+  input[type=range]{flex:1; accent-color:var(--accent); height:4px;}
+  .slider-val{width:26px; text-align:center; font-weight:700; font-size:15px; font-variant-numeric:tabular-nums;}
+
+  .segmented{display:flex; gap:6px;}
+  .seg{flex:1; text-align:center; padding:9px 4px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); font-size:11.5px; color:var(--text-dim); cursor:pointer; user-select:none;}
+  .seg.selected{background:var(--accent); border-color:var(--accent); color:#1a0e07; font-weight:700;}
+
+  .scrub-label{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+  .scrub-state{font-size:12.5px; padding:3px 9px; border-radius:20px; background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim); font-weight:600;}
+  input#scrub{width:100%; accent-color:var(--accent); margin-top:14px;}
+  .scrub-caption{font-size:12.5px; color:var(--text-faint); margin-top:8px;}
+
+  .states{display:flex; flex-direction:column; gap:10px; margin-top:18px;}
+  .state-row{
+    display:flex; align-items:center; gap:14px;
+    background:var(--surface); border:1px solid var(--border); border-radius:14px;
+    padding:14px 16px;
+  }
+  .state-row .mini-arc{width:56px; height:28px; flex:none;}
+  .state-row .st-text b{display:block; font-size:14px; font-weight:700;}
+  .state-row .st-text span{font-size:13px; color:var(--text-dim);}
+
+  .quote-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:20px 22px; margin-top:6px;
+  }
+  .quote-card p{
+    font-style:italic; color:var(--text); font-size:15.5px; margin:0;
+    border-left:2px solid var(--accent); padding-left:14px;
+  }
+  .quote-card .who{font-size:12.5px; color:var(--text-faint); margin-top:10px; font-style:normal;}
+
+  .cta{
+    padding:54px 0 80px; text-align:center; border-top:1px solid var(--border);
+  }
+  .cta h2{margin-bottom:8px;}
+  .cta p{max-width:360px; margin:0 auto 22px;}
+  .btn{
+    display:inline-block; background:var(--accent); color:#1a0e07;
+    font-weight:700; font-size:15.5px; text-decoration:none;
+    padding:15px 30px; border-radius:14px;
+    box-shadow:0 10px 30px -10px rgba(255,140,90,.5);
+  }
+  .foot-note{margin-top:16px; font-size:12.5px; color:var(--text-faint);}
+
+  @media (prefers-reduced-motion: reduce){
+    path#arc-path{animation:none; stroke-dashoffset:0;}
+    circle#arc-dot{animation:none; opacity:1;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Increment</div>
+    <h1>Track the effort.<br>Trust <span>the curve.</span></h1>
+    <p class="hero-sub">Log the work. Increment turns it into a shape you can actually watch.</p>
+
+    <div class="arc-stage">
+      <svg viewBox="0 0 520 200" width="100%" height="auto">
+        <path d="M 30 165 C 140 165, 160 55, 280 45 C 380 37, 430 70, 490 95"
+              id="arc-path" fill="none" stroke="#ff8c5a" stroke-width="3.5" stroke-linecap="round"/>
+        <circle id="arc-dot" cx="490" cy="95" r="6" fill="#ffb088"/>
+      </svg>
+      <div class="arc-caption">One arc. Every session you log bends it a little more.</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-label">The idea</div>
+    <h2>Every session becomes a point</h2>
+    <p>Run, read, write, whatever you're building. Log it as an <b class="hl">increment</b> and rate two things: how hard it felt, and whether you'd want to do it again. Multiply those together and you get an <b class="hl">Effort Score</b>. Try it:</p>
+
+    <div class="demo">
+      <div class="demo-label">Effort score calculator</div>
+      <div class="es-readout"><span class="es-num" id="es-num">6.0</span><span class="es-unit">effort score</span></div>
+      <div class="es-bar-track"><div class="es-bar-fill" id="es-bar"></div></div>
+
+      <div class="field-label">How hard did it feel</div>
+      <div class="slider-row">
+        <input type="range" min="1" max="10" value="6" id="es-difficulty" />
+        <div class="slider-val" id="es-difficulty-val">6</div>
+      </div>
+
+      <div class="field-label">Would you do it again</div>
+      <div class="segmented" id="es-willingness">
+        <div class="seg" data-v="1">Rather not</div>
+        <div class="seg" data-v="2">Reluctant</div>
+        <div class="seg selected" data-v="3">Neutral</div>
+        <div class="seg" data-v="4">Willing</div>
+        <div class="seg" data-v="5">Love to</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">How the graph plots</div>
+    <h2>Ten sessions, one shape</h2>
+    <p>Each increment adds a point. String enough points together and a curve appears on its own. Drag the slider through a sample arc and watch it happen.</p>
+
+    <div class="demo">
+      <div class="demo-label">Sample arc</div>
+      <svg viewBox="0 0 460 140" width="100%" height="auto" id="scrub-svg">
+        <defs>
+          <clipPath id="reveal-clip"><rect id="reveal-rect" x="0" y="0" width="0" height="140"/></clipPath>
+        </defs>
+        <path id="scrub-path" fill="none" stroke="#3FBF8F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#reveal-clip)"/>
+        <circle id="scrub-dot" r="5" fill="#6be0b0"/>
+      </svg>
+      <div class="scrub-label">
+        <span id="scrub-session">Session 1 of 10</span>
+        <span class="scrub-state" id="scrub-state">Building</span>
+      </div>
+      <input type="range" id="scrub" min="1" max="10" value="1" />
+      <div class="scrub-caption">A run of hard, honest sessions followed by a plateau. Nothing dramatic. Just a shape.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">Reading your arc</div>
+    <h2>Four states, no judgment</h2>
+    <div class="states">
+      <div class="state-row">
+        <svg class="mini-arc" viewBox="0 0 56 28"><path d="M4 24 Q 28 24 28 8" stroke="#8B7CF6" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+        <div class="st-text"><b>Building</b><span>Just getting going. Not enough sessions yet to see a shape.</span></div>
+      </div>
+      <div class="state-row">
+        <svg class="mini-arc" viewBox="0 0 56 28"><path d="M4 24 Q 28 20 52 4" stroke="#3FBF8F" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+        <div class="st-text"><b>Rising</b><span>Recent sessions are working harder than the ones before them.</span></div>
+      </div>
+      <div class="state-row">
+        <svg class="mini-arc" viewBox="0 0 56 28"><path d="M4 14 Q 28 10 52 14" stroke="#E8B84B" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+        <div class="st-text"><b>Steady</b><span>You found your level and you're holding it.</span></div>
+      </div>
+      <div class="state-row">
+        <svg class="mini-arc" viewBox="0 0 56 28"><path d="M4 6 Q 28 8 52 18" stroke="#F2954B" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+        <div class="st-text"><b>Declining</b><span>Easing off. Usually just means you got good at this.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">In practice</div>
+    <h2>It sneaks into how you talk</h2>
+    <div class="quote-card">
+      <p>"I'm 12 increments into my running arc, it's plateauing."</p>
+      <div class="who">Translation: steady, consistent, no longer a struggle.</div>
+    </div>
+  </section>
+
+  <div class="cta">
+    <h2>Ready to start your first arc?</h2>
+    <p>Open Increment and log your first increment. The shape starts from session one.</p>
+    <a class="btn" href="#" id="open-app-link">Open Increment →</a>
+    <div class="foot-note">Works right in your browser. Add it to your home screen for the full app feel.</div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('open-app-link').setAttribute('href', 'REPLACE_WITH_YOUR_APP_URL');
+
+  const WILL_MULT = {1:0.6, 2:0.8, 3:1.0, 4:1.2, 5:1.4};
+  let esDifficulty = 6, esWillingness = 3;
+  const esNum = document.getElementById('es-num');
+  const esBar = document.getElementById('es-bar');
+  const esDiffSlider = document.getElementById('es-difficulty');
+  const esDiffVal = document.getElementById('es-difficulty-val');
+
+  function updateES(){
+    const es = esDifficulty * WILL_MULT[esWillingness];
+    esNum.textContent = es.toFixed(1);
+    esBar.style.width = Math.min(100, (es/14)*100) + '%';
+  }
+  esDiffSlider.addEventListener('input', ()=>{
+    esDifficulty = +esDiffSlider.value;
+    esDiffVal.textContent = esDifficulty;
+    updateES();
+  });
+  document.querySelectorAll('#es-willingness .seg').forEach(seg=>{
+    seg.addEventListener('click', ()=>{
+      document.querySelectorAll('#es-willingness .seg').forEach(s=>s.classList.remove('selected'));
+      seg.classList.add('selected');
+      esWillingness = +seg.dataset.v;
+      updateES();
+    });
+  });
+  updateES();
+
+  const sample = [3, 4.2, 5.5, 6.8, 8.5, 9.6, 9.8, 9.5, 9.3, 9.1];
+  const W = 460, H = 140, PAD = 14;
+  const maxES = Math.max(...sample);
+  function pointFor(i){
+    const x = PAD + (i/(sample.length-1)) * (W - 2*PAD);
+    const y = H - PAD - (sample[i]/maxES) * (H - 2*PAD);
+    return [x,y];
+  }
+  const pathData = sample.map((v,i)=>{
+    const [x,y] = pointFor(i);
+    return (i===0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  document.getElementById('scrub-path').setAttribute('d', pathData);
+
+  function stateFor(n){
+    const data = sample.slice(0,n);
+    if(data.length < 3) return 'Building';
+    const recent = data.slice(-3);
+    const prior = data.slice(-6,-3);
+    const avg = a => a.reduce((x,y)=>x+y,0)/a.length;
+    if(prior.length === 0) return 'Rising';
+    const d = avg(recent) - avg(prior);
+    const th = avg(prior) * 0.08;
+    if(d > th) return 'Rising';
+    if(d < -th) return 'Declining';
+    return 'Steady';
+  }
+
+  const scrub = document.getElementById('scrub');
+  const revealRect = document.getElementById('reveal-rect');
+  const scrubDot = document.getElementById('scrub-dot');
+  const scrubSession = document.getElementById('scrub-session');
+  const scrubState = document.getElementById('scrub-state');
+
+  function updateScrub(){
+    const n = +scrub.value;
+    const idx = n - 1;
+    const [x,y] = pointFor(idx);
+    revealRect.setAttribute('width', Math.max(0, x + 2));
+    scrubDot.setAttribute('cx', x);
+    scrubDot.setAttribute('cy', y);
+    scrubSession.textContent = 'Session ' + n + ' of ' + sample.length;
+    scrubState.textContent = stateFor(n);
+  }
+  scrub.addEventListener('input', updateScrub);
+  updateScrub();
+</script>
+</body>
+</html>
